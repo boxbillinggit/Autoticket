@@ -196,7 +196,7 @@ class Box_Mod_Autoticket_Controller_Admin
 								$params_ticket = array(
 								"client_id" => $client['id'],
 								"content" => $message['body'],
-								"subject" => $this->decode_imap_text($overview[0]->from),
+								"subject" => $this->decode_imap_text($overview[0]->from).' - '. $overview[0]->subject,
 								"support_helpdesk_id" => 1,
 								"status" => "open",
 								);
