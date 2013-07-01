@@ -1,0 +1,62 @@
+{% extends request.ajax ? "layout_blank.phtml" : "layout_default.phtml" %}
+
+{% block meta_title %}{% trans 'Automatyczne Tworzenie Ticketów' %}{% endblock %}
+
+{% set active_menu = 'autoticket' %}
+
+{% block content %}
+
+<div class="widget first">
+    <div class="head">
+        <h5>{% trans 'Automatyczne Tworzenie Ticketów' %}</h5>
+    </div>
+
+    <div class="help">
+        <h3>{% trans 'Moduł do automatycznego tworzenia ticketów pobranych z adresu e-mail' %}</h3>
+    </div>
+
+     <table class="tableStatic wide">
+        <tbody>
+            <tr class="noborder">
+                <td>{% trans 'Timezone' %}</td>
+                <td align="right">{{ "now"|date('e') }}</td>
+            </tr>
+
+            <tr>
+                <td>{% trans 'Time on server' %}</td>
+                <td align="right">{{ "now"|date('Y-m-d H:i:s') }}</td>
+            </tr>
+            <tr>
+                <td>{% trans 'Last time scheduled tasks were executed' %}</td>
+                <td align="right">
+                    {% if cron.last_cron_exec %}
+                        {{ cron.last_cron_exec|date('Y-m-d H:i:s') }}
+                        ({{cron.last_cron_exec|timeago }} ago)
+                    {% else %}
+                        {% trans 'Scheduled tasks were never executed' %}
+                    {% endif %}
+                </td>
+            </tr>
+            <tr>
+                <td>{% trans 'Unix crontab setup:' %}</td>
+                <td align="right"><pre>*/5 * * * * php {{ sciezka }}/bb-modules/mod_autoticket/Cron.php</pre></td>
+            </tr>
+            <tr>
+                <td>{% trans 'Execute scheduled tasks from browser' %}</td>
+                <td align="right"><pre>{{ cron.cron_url}}</pre></td>
+            </tr>
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="2">
+                    <div class="aligncenter">
+                    <a href="{{ 'autoticket'|alink }}/pobierz" title="" class="btn55 mr10"><img src="images/icons/middlenav/airplane.png" alt=""><span>{% trans 'Execute now' %}</span></a>
+                    </div>
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+    
+</div>
+
+{% endblock %}

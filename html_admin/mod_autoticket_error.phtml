@@ -1,0 +1,27 @@
+{% extends request.ajax ? "layout_blank.phtml" : "layout_default.phtml" %}
+
+{% block meta_title %}{% trans 'Automatyczne Tworzenie Ticketów' %}{% endblock %}
+
+{% set active_menu = 'autoticket' %}
+
+{% block content %}
+
+<div class="widget first">
+    <div class="head">
+        <h5>{% trans 'Automatyczne Tworzenie Ticketów' %}</h5>
+    </div>
+
+    <div class="help">
+        <h3>{% trans 'Moduł do automatycznego tworzenia ticketów pobranych z adresu e-mail' %}</h3>
+    </div>
+
+<div class="errorPage">
+        <h2 class="red errorTitle"><span>{% trans 'Coś poszło nie tak tutaj' %}</span></h2>
+        <h1>{% if exception.getCode == 0%}999{% else %} {{ exception.getCode }} {% endif %}</h1>
+        <span class="bubbles"></span>
+        <p>Niestety ale nie masz zainstalowanego php5-imap, poproś o doinstalowanie lub jak masz własny serwer doinstalują aby korzystać z tego modułu</p>
+    </div>
+    
+</div>
+
+{% endblock %}

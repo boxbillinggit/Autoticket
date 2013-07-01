@@ -1,0 +1,63 @@
+{% extends request.ajax ? "layout_blank.phtml" : "layout_default.phtml" %}
+{% import "macro_functions.phtml" as mf %}
+{% block meta_title %}Automatyczne Tworzenie Ticketów - Ustawienia{% endblock %}
+{% set active_menu = 'autoticket' %}
+
+{% block breadcrumbs %}
+<ul>
+    <li class="firstB"><a href="{{ '/'|alink }}">{% trans 'Home' %}</a></li>
+    <li><a href="{{ 'autoticket'|alink }}">{% trans 'Autoticket' %}</a></li>
+    <li class="lastB">{% trans 'Automatyczne Tworzenie Ticketów - Ustawienia' %}</li>
+</ul>
+{% endblock %}
+
+{% block content %}
+
+<div class="widget">
+    <div class="head">
+        <h5 class="iCog">{% trans 'Autoticket Kreator Ustawienia' %}</h5>
+    </div>
+
+{% set params = admin.extension_config_get({"ext":"mod_autoticket"}) %}
+
+<form method="post" action="admin/autoticket/config_save" class="mainForm api-form" data-api-msg="{% trans 'Configuration updated' %}">
+    
+    <div class="help">
+        <h3>{% trans 'Ustawienia Auto Ticket Create' %}</h3>
+        <p>{% trans 'Wprowadź poniższe dane.' %}</p>
+    </div>
+    
+    <fieldset>
+        <div class="rowElem">
+            <label>{% trans 'Parameter Host' %}</label>
+            <div class="formRight">
+                <input type="text" name="autoticket_host" value="{{autoticket_host}}" placeholder="{% trans 'domena.pl' %}"/>
+            </div>
+            <div class="fix"></div>
+        </div>
+
+		<div class="rowElem">
+            <label>{% trans 'Parameter Email' %}</label>
+            <div class="formRight">
+                <input type="text" name="autoticket_email" value="{{autoticket_email}}" placeholder="{% trans 'mail@domena.pl' %}"/>
+            </div>
+            <div class="fix"></div>
+        </div>
+        
+        <div class="rowElem">
+            <label>{% trans 'Parameter Haslo' %}</label>
+            <div class="formRight">
+                <input type="text" name="autoticket_password" value="{{autoticket_password}}"/>
+            </div>
+            <div class="fix"></div>
+        </div>
+
+
+        <input type="submit" value="{% trans 'Update' %}" class="greyishBtn submitForm" />
+        <input type="hidden" name="ext" value="mod_autoticket" />
+        <input type="hidden" name="rel_type" value="settings" />
+    </fieldset>
+</form>
+</div>
+
+{% endblock %}
