@@ -82,7 +82,14 @@ define( "BB_MODE_CRON", TRUE );
 								
 							}
 														
-						} 
+						}
+						
+		//DATA WYKONANIA CRONA!!			
+		$date_update = date("c");
+		$pdo = Box_Db::getPdo();
+        $query="UPDATE `setting` SET `value`='{$date_update}' WHERE id='40'";
+        $stmt = $pdo->prepare($query);
+        $stmt->execute(); 
 
 		} else {
 			echo "imap_check() failed: " . imap_last_error() . "<br />\n";

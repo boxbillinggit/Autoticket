@@ -108,18 +108,52 @@ class Box_Mod_Autoticket_Controller_Admin
 	*
 	*/
 	
+	public function install_sql() {
+		
+		$pdo = Box_Db::getPdo();
+        $query="SELECT `param` FROM `setting` WHERE `id` ='40'";
+        $stmt = $pdo->prepare($query);
+        $stmt->execute();
+		$checkIfExits = $stmt->fetchAll();
+		
+		if(empty($checkIfExits)) {
+			
+			$created_at = date("c");
+			$pdo = Box_Db::getPdo();
+			$query="INSERT INTO `setting`(`id`, `param`, `value`, `public`, `category`, `hash`, `created_at`, `updated_at`) VALUES (40,'autoticket_last_cron_exec','',0,NULL,NULL,'{$created_at}','')";
+			$stmt = $pdo->prepare($query);
+			$stmt->execute();
+			
+		} else {
+			return true;
+		}
+		
+	}
+	
 	public function _config(Box_App $app,$name) {
 		$api = $app->getApiAdmin();
 		
-		$pdo = Box_Db::getPdo();
-        $query="SELECT `meta_value` FROM `extension_meta` WHERE `extension` ='mod_autoticket'";
-        $stmt = $pdo->prepare($query);
-        $stmt->execute();
+			$this->install_sql();
 		
+			$pdo = Box_Db::getPdo();
+			$query="SELECT `meta_value` FROM `extension_meta` WHERE `extension` ='mod_autoticket'";
+			$stmt = $pdo->prepare($query);
+			$stmt->execute();
+		
+				
 		$toArray = $stmt->fetchAll();
 		$result = json_decode($toArray[0]['meta_value']);
 		
 		return $result->$name;
+	}
+	
+	public function _cron_info() {
+			$pdo = Box_Db::getPdo();
+			$query="SELECT `value` FROM `setting` WHERE `id` ='40'";
+			$stmt = $pdo->prepare($query);
+			$stmt->execute();	
+			$toArray = $stmt->fetchAll();
+			return $toArray[0]['value'];
 	}
 
     public function get_index(Box_App $app)
@@ -136,6 +170,8 @@ class Box_Mod_Autoticket_Controller_Admin
 		if (function_exists('imap_open')) {
 			$parametr = array();
 			$parametr['sciezka'] = $_SERVER['DOCUMENT_ROOT'];
+			$parametr['cron']['cron_url'] = 'http://'.$_SERVER['HTTP_HOST'].'/bb-modules/mod_autoticket/Cron.php';
+			$parametr['cron']['last_cron_exec'] = $this->_cron_info();
 			return $app->render('mod_autoticket_index',$parametr);
 		} else {
 			return $app->render('mod_autoticket_error');
@@ -210,6 +246,13 @@ class Box_Mod_Autoticket_Controller_Admin
 							}
 							
 						} 
+
+		//DATA WYKONANIA CRONA!!			
+		$date_update = date("c");
+		$pdo = Box_Db::getPdo();
+        $query="UPDATE `setting` SET `value`='{$date_update}' WHERE id='40'";
+        $stmt = $pdo->prepare($query);
+        $stmt->execute(); 
 
 		} else {
 			echo "imap_check() failed: " . imap_last_error() . "<br />\n";

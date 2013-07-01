@@ -43,7 +43,7 @@ class Box_Mod_Autoticket_Service
         $query="SELECT NOW()";
         $stmt = $pdo->prepare($query);
         $stmt->execute();
-
+		
         //throw new Box_Exception("Throw exception to terminate module installation process with a message", array(), 123);
         return true;
     }
