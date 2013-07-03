@@ -38,10 +38,6 @@
                 </td>
             </tr>
             <tr>
-                <td>{% trans 'Unix crontab setup:' %}</td>
-                <td align="right"><pre>*/5 * * * * php {{ sciezka }}/bb-modules/mod_autoticket/Cron.php</pre></td>
-            </tr>
-            <tr>
                 <td>{% trans 'Execute scheduled tasks from browser' %}</td>
                 <td align="right"><pre>{{ cron.cron_url}}</pre></td>
             </tr>
@@ -50,7 +46,7 @@
             <tr>
                 <td colspan="2">
                     <div class="aligncenter">
-                    <a href="{{ 'autoticket'|alink }}/pobierz" title="" class="btn55 mr10"><img src="images/icons/middlenav/airplane.png" alt=""><span>{% trans 'Execute now' %}</span></a>
+                    <a href="{{ cron.cron_url}}" title="" class="btn55 mr10" target="_blank"><img src="images/icons/middlenav/airplane.png" alt=""><span>{% trans 'Execute now' %}</span></a>
                     </div>
                 </td>
             </tr>

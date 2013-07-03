@@ -98,7 +98,6 @@ class Box_Mod_Autoticket_Controller_Admin
     public function register(Box_App &$app)
     {
         $app->get('/autoticket',             'get_index', array(), get_class($this));
-        $app->get('/autoticket/pobierz',     'get_email', array(), get_class($this));
 		$app->get('/autoticket/settings',    'get_settings', array(), get_class($this));
     }
 	
@@ -170,7 +169,7 @@ class Box_Mod_Autoticket_Controller_Admin
 		if (function_exists('imap_open')) {
 			$parametr = array();
 			$parametr['sciezka'] = $_SERVER['DOCUMENT_ROOT'];
-			$parametr['cron']['cron_url'] = 'http://'.$_SERVER['HTTP_HOST'].'/bb-modules/mod_autoticket/Cron.php';
+			$parametr['cron']['cron_url'] = 'http://'.$_SERVER['HTTP_HOST'].'/bb-cron.php';
 			$parametr['cron']['last_cron_exec'] = $this->_cron_info();
 			return $app->render('mod_autoticket_index',$parametr);
 		} else {
@@ -179,90 +178,6 @@ class Box_Mod_Autoticket_Controller_Admin
 		}
         
     }
-	
-	public function decode_imap_text($str){
-    $result = '';
-    $decode_header = imap_mime_header_decode($str);
-    foreach ($decode_header AS $obj) {
-        $result .= htmlspecialchars(rtrim($obj->text, "\t"));
-    }
-    return $result;
-	}
-	
-	public function get_email(Box_App $app) {
-	
-		$api_admin = $app->getApiAdmin();
-	
-		$mbox = imap_open("{".$this->_config($app,"autoticket_host")."/imap/notls}INBOX", $this->_config($app,"autoticket_email"), $this->_config($app,"autoticket_password"))
-			  or die("can't connect: " . imap_last_error());
-		
-		$check = imap_mailboxmsginfo($mbox);
-		
-		if ($check) {
-			$obiekty = array();
-			
-			$obiekty['Date']     = $check->Date;
-			$obiekty['Driver']   = $check->Driver;
-			$obiekty['Mailbox']  = $check->Mailbox;
-			$obiekty['Messages'] = $check->Nmsgs;
-			$obiekty['Recent']   = $check->Recent;
-			$obiekty['Unread']   = $check->Unread;
-			$obiekty['Deleted']  = $check->Deleted;
-			$obiekty['Size']     = $check->Size;
-		
-		
-	 
-		 $emails = imap_search($mbox, 'ALL');
-
-						rsort($emails);
-						
-						foreach($emails as $email_id){
-							
-							// Fetch the email's overview and show subject, from and date. 
-							$overview = imap_fetch_overview($mbox,$email_id,0);	
-							$message['body'] = imap_fetchbody($mbox,$email_id,"1");		
-
-							$params = array("email"=>$this->decode_imap_text($overview[0]->from));
-							
-							$client = $api_admin->client_get($params);
-							if(empty($client)) {
-								
-							} else {
-								
-								$params_ticket = array(
-								"client_id" => $client['id'],
-								"content" => $message['body'],
-								"subject" => $this->decode_imap_text($overview[0]->from).' - '. $overview[0]->subject,
-								"support_helpdesk_id" => 1,
-								"status" => "open",
-								);
-								
-								$ticket_create = $api_admin->support_ticket_create($params_ticket);
-								
-								//Usuwanie dodanej wiadomości
-								imap_delete($mbox, $overview[0]->msgno);
-								imap_expunge($mbox);
-								
-							}
-							
-						} 
-
-		//DATA WYKONANIA CRONA!!			
-		$date_update = date("c");
-		$pdo = Box_Db::getPdo();
-        $query="UPDATE `setting` SET `value`='{$date_update}' WHERE id='40'";
-        $stmt = $pdo->prepare($query);
-        $stmt->execute(); 
-
-		} else {
-			echo "imap_check() failed: " . imap_last_error() . "<br />\n";
-		}
-		
-		imap_close($mbox);
-
-		
-		return $app->render('mod_autoticket_get', $obiekty);
-	}
 	
 	public function get_settings(Box_App $app) {
 		$api_admin = $app->getApiAdmin();
