@@ -228,7 +228,6 @@ class Box_Mod_Autoticket_Service
         $api->email_template_send($email);
     }
 	
-<<<<<<< HEAD
 	function decode_imap_text($str){
 			$result = '';
 			$decode_header = imap_mime_header_decode($str);
@@ -238,8 +237,6 @@ class Box_Mod_Autoticket_Service
 			return $result;
 		}
 	
-=======
->>>>>>> Cron
     public static function onAfterAdminCronRun(Box_Event $event) {
 	
 		$pdo = Box_Db::getPdo();
@@ -249,18 +246,6 @@ class Box_Mod_Autoticket_Service
 		
 		$toArray = $stmt->fetchAll();
 		$result = json_decode($toArray[0]['meta_value']);
-<<<<<<< HEAD
-=======
-					
-		function decode_imap_text($str){
-			$result = '';
-			$decode_header = imap_mime_header_decode($str);
-			foreach ($decode_header AS $obj) {
-				$result .= htmlspecialchars(rtrim($obj->text, "\t"));
-			}
-			return $result;
-		}
->>>>>>> Cron
 		
 		$mbox = imap_open("{".$result->autoticket_host."/imap/notls}INBOX", $result->autoticket_email, $result->autoticket_password)
 			  or die("can't connect: " . imap_last_error());
@@ -279,17 +264,10 @@ class Box_Mod_Autoticket_Service
 							$overview = imap_fetch_overview($mbox,$email_id,0);	
 							$message['body'] = imap_fetchbody($mbox,$email_id,"1");		
 							
-<<<<<<< HEAD
 							$params = array("email"=>Box_Mod_Autoticket_Service::decode_imap_text($overview[0]->from));
 							
 							$pdo = Box_Db::getPdo();
 							$query="SELECT `id`,`email` FROM `client` WHERE `email` = '".Box_Mod_Autoticket_Service::decode_imap_text($overview[0]->from)."'";
-=======
-							$params = array("email"=>decode_imap_text($overview[0]->from));
-							
-							$pdo = Box_Db::getPdo();
-							$query="SELECT `id`,`email` FROM `client` WHERE `email` = '".decode_imap_text($overview[0]->from)."'";
->>>>>>> Cron
 							$stmt = $pdo->prepare($query);
 							$stmt->execute();
 							
