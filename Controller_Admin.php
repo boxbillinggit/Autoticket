@@ -110,7 +110,7 @@ class Box_Mod_Autoticket_Controller_Admin
 	public function install_sql() {
 		
 		$pdo = Box_Db::getPdo();
-        $query="SELECT `param` FROM `setting` WHERE `id` ='40'";
+        $query="SELECT `param` FROM `setting` WHERE `param` ='autoticket_last_cron_exec'";
         $stmt = $pdo->prepare($query);
         $stmt->execute();
 		$checkIfExits = $stmt->fetchAll();
@@ -119,7 +119,7 @@ class Box_Mod_Autoticket_Controller_Admin
 			
 			$created_at = date("c");
 			$pdo = Box_Db::getPdo();
-			$query="INSERT INTO `setting`(`id`, `param`, `value`, `public`, `category`, `hash`, `created_at`, `updated_at`) VALUES (40,'autoticket_last_cron_exec','',0,NULL,NULL,'{$created_at}','')";
+			$query="INSERT INTO `setting`(`param`, `value`, `public`, `category`, `hash`, `created_at`, `updated_at`) VALUES ('autoticket_last_cron_exec','',0,NULL,NULL,'{$created_at}','')";
 			$stmt = $pdo->prepare($query);
 			$stmt->execute();
 			
@@ -148,7 +148,7 @@ class Box_Mod_Autoticket_Controller_Admin
 	
 	public function _cron_info() {
 			$pdo = Box_Db::getPdo();
-			$query="SELECT `value` FROM `setting` WHERE `id` ='40'";
+			$query="SELECT `value` FROM `setting` WHERE `param` ='autoticket_last_cron_exec'";
 			$stmt = $pdo->prepare($query);
 			$stmt->execute();	
 			$toArray = $stmt->fetchAll();
