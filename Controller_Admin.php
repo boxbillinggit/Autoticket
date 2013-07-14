@@ -169,7 +169,7 @@ class Box_Mod_Autoticket_Controller_Admin
 		if (function_exists('imap_open')) {
 			$parametr = array();
 			$parametr['sciezka'] = $_SERVER['DOCUMENT_ROOT'];
-			$parametr['cron']['cron_url'] = 'http://'.$_SERVER['HTTP_HOST'].'/bb-cron.php';
+			$parametr['cron']['cron_url'] = '/bb-cron.php';
 			$parametr['cron']['last_cron_exec'] = $this->_cron_info();
 			return $app->render('mod_autoticket_index',$parametr);
 		} else {
