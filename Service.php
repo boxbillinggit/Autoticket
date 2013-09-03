@@ -190,14 +190,12 @@ class Box_Mod_Autoticket_Service
      * Example event hook for public ticket and set event return value
      * @param Box_Event $event 
      */
-/*    public static function onBeforeGuestPublicTicketOpen(Box_Event $event)
+   public static function onBeforeGuestPublicTicketOpen(Box_Event $event)
     {
         $data = $event->getParameters();
         $data['status'] = 'open';
-        $data['subject'] = 'Altered subject';
-        $data['message'] = 'Altered text';
         $event->setReturnValue($data);
-    }*/
+    }
 
     /**
      * Example email sending
