@@ -134,9 +134,14 @@ class Box_Mod_Autoticket_Service
         
         //sometimes you may need guest API
         //$api_guest = $event->getApiGuest();
-
         $params = $event->getParameters();
-
+        
+        //@note To debug parameters by throw an exception
+        //throw new Exception(print_r($params, 1));
+        
+        // Use RedBean ORM in any place of BoxBilling where API call is not enough
+        // First we neeed to find if we already have a counter for this IP
+        // We will use extension_meta table to store this data.
         $values = array(
             'ext'        =>  'autoticket',
             'rel_type'   =>  'ip',
@@ -156,11 +161,15 @@ class Box_Mod_Autoticket_Service
         $meta->meta_value = $meta->meta_value + 1;
         $meta->updated_at = date('c');
         R::store($meta);
-
+        
+        // Now we can perform task depending on how many times wrong details were entered
+        
+        // We can log event if it repeats for 2 time
         if($meta->meta_value > 2) {
             $api->activity_log(array('m'=>'Client failed to enter correct login details '.$meta->meta_value.' time(s)'));
         }
         
+        // if client gets funky, we block him
         if($meta->meta_value > 30) {
             throw new Exception('You have failed to login too many times. Contact support.');
         }
@@ -190,7 +199,7 @@ class Box_Mod_Autoticket_Service
      * Example event hook for public ticket and set event return value
      * @param Box_Event $event 
      */
-   public static function onBeforeGuestPublicTicketOpen(Box_Event $event)
+    public static function onBeforeGuestPublicTicketOpen(Box_Event $event)
     {
         $data = $event->getParameters();
         $data['status'] = 'open';
@@ -227,11 +236,11 @@ class Box_Mod_Autoticket_Service
 		}
 	
     public static function onAfterAdminCronRun(Box_Event $event) {
-		
-
-		$api_guest = $event->getApiGuest();
-		$api_client = $event->getApiClient();
-
+	
+	 $api_guest = $event->getApiGuest();
+	 $api    = $event->getApiAdmin();
+	 
+	 
 		$pdo = Box_Db::getPdo();
         $query="SELECT * FROM extension_meta WHERE extension='mod_autoticket'";
         $stmt = $pdo->prepare($query);
@@ -267,41 +276,48 @@ class Box_Mod_Autoticket_Service
 							$email = $stmt->fetchAll();
 							
 							if(empty($email[0]['email'])) {
+								
 								$params = array(
-								"name" => $overview[0]->subject,
-								"email" => $email[0]['email'],
-								"subject" => $email[0]['email']." - ".$overview[0]->subject,
+								"name" => Box_Mod_Autoticket_Service::decode_imap_text($overview[0]->from),
+								"email" => Box_Mod_Autoticket_Service::decode_imap_text($overview[0]->from),
+								"subject" => Box_Mod_Autoticket_Service::decode_imap_text($overview[0]->from)." - ".$overview[0]->subject,
 								"message" => $message['body']
 								);
+								
 								$api_guest->support_ticket_create($params);
 								
 							} else {
+								$params = array("client_id" => $email[0]['id']);
+								$result = $api->support_ticket_get_list($params);
 								
-		$params = array(
-		"support_helpdesk_id" => 1,
-		"subject" => $email[0]['email']." - ".$overview[0]->subject,
-		"content" => $message['body']
-		);
-		$api_client->support_ticket_create($params);
+								if(empty ($result['list'])) {
+									
+									$params = array(
+									"client_id" => $email[0]['id'],
+									"content" => $message['body'],
+									"subject" => $email[0]['email']." - ".$overview[0]->subject,
+									"support_helpdesk_id" => "1"
+									);
+									
+									$api->support_ticket_create($params);
+									
+								} else {
+											
+											foreach($result['list'] as $klucz) {
+												$ticket_id = $klucz['id'];
+											}
 								
-								/*$pdo = Box_Db::getPdo();
-								$query="INSERT INTO `support_ticket`(`support_helpdesk_id`, `client_id`, `priority`, `subject`, `status`, `rel_type`, `rel_id`, `rel_task`, `rel_new_value`, `rel_status`, `created_at`, `updated_at`) VALUES ('1',".$email[0]['id'].",100,'".$email[0]['email']." - ".$overview[0]->subject."','open',NULL,NULL,NULL,NULL,NULL,NOW(),NOW())";
-								$stmt = $pdo->prepare($query);
-								$stmt->execute();
+								$params = array(
+									"id" => $ticket_id,
+									"client_id" => $email[0]['id'],
+									"content" => $message['body'],
+								);
 								
-								$pdo = Box_Db::getPdo();
-								$query="SHOW TABLE STATUS LIKE 'support_ticket'";
-								$stmt = $pdo->prepare($query);
-								$stmt->execute();
-								$NextId = $stmt->fetchAll();
-								$newid = $NextId[0]['Auto_increment']-1;
+								$api->support_ticket_reply($params);
 								
-								$pdo = Box_Db::getPdo();
-								$query="INSERT INTO `support_ticket_message`(`support_ticket_id`, `client_id`, `admin_id`, `content`, `attachment`, `ip`, `created_at`, `updated_at`) VALUES (".$newid.",".$email[0]['id'].",NULL,'".$message['body']."',NULL,NULL,NOW(),NOW())";
-								$stmt = $pdo->prepare($query);
-								$stmt->execute(); */
+								}
+								
 
-								
 								//Usuwanie dodanej wiadomości
 								imap_delete($mbox, $overview[0]->msgno);
 								imap_expunge($mbox);
