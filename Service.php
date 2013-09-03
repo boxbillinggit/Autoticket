@@ -230,6 +230,7 @@ class Box_Mod_Autoticket_Service
 		
 
 		$api_guest = $event->getApiGuest();
+		$api_client = $event->getApiClient();
 
 		$pdo = Box_Db::getPdo();
         $query="SELECT * FROM extension_meta WHERE extension='mod_autoticket'";
@@ -266,16 +267,22 @@ class Box_Mod_Autoticket_Service
 							$email = $stmt->fetchAll();
 							
 							if(empty($email[0]['email'])) {
+								$params = array(
+								"name" => $overview[0]->subject,
+								"email" => $email[0]['email'],
+								"subject" => $email[0]['email']." - ".$overview[0]->subject,
+								"message" => $message['body']
+								);
+								$api_guest->support_ticket_create($params);
 								
 							} else {
 								
 		$params = array(
-		"name" => $overview[0]->subject,
-		"email" => $email[0]['email'],
+		"support_helpdesk_id" => 1,
 		"subject" => $email[0]['email']." - ".$overview[0]->subject,
-		"message" => $message['body']
+		"content" => $message['body']
 		);
-		$api_guest->support_ticket_create($params);
+		$api_client->support_ticket_create($params);
 								
 								/*$pdo = Box_Db::getPdo();
 								$query="INSERT INTO `support_ticket`(`support_helpdesk_id`, `client_id`, `priority`, `subject`, `status`, `rel_type`, `rel_id`, `rel_task`, `rel_new_value`, `rel_status`, `created_at`, `updated_at`) VALUES ('1',".$email[0]['id'].",100,'".$email[0]['email']." - ".$overview[0]->subject."','open',NULL,NULL,NULL,NULL,NULL,NOW(),NOW())";
