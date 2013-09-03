@@ -134,14 +134,9 @@ class Box_Mod_Autoticket_Service
         
         //sometimes you may need guest API
         //$api_guest = $event->getApiGuest();
+
         $params = $event->getParameters();
-        
-        //@note To debug parameters by throw an exception
-        //throw new Exception(print_r($params, 1));
-        
-        // Use RedBean ORM in any place of BoxBilling where API call is not enough
-        // First we neeed to find if we already have a counter for this IP
-        // We will use extension_meta table to store this data.
+
         $values = array(
             'ext'        =>  'autoticket',
             'rel_type'   =>  'ip',
@@ -161,15 +156,11 @@ class Box_Mod_Autoticket_Service
         $meta->meta_value = $meta->meta_value + 1;
         $meta->updated_at = date('c');
         R::store($meta);
-        
-        // Now we can perform task depending on how many times wrong details were entered
-        
-        // We can log event if it repeats for 2 time
+
         if($meta->meta_value > 2) {
             $api->activity_log(array('m'=>'Client failed to enter correct login details '.$meta->meta_value.' time(s)'));
         }
         
-        // if client gets funky, we block him
         if($meta->meta_value > 30) {
             throw new Exception('You have failed to login too many times. Contact support.');
         }
@@ -237,8 +228,11 @@ class Box_Mod_Autoticket_Service
 			return $result;
 		}
 	
-    public static function onAfterAdminCronRun(Box_Event $event) {
-	
+    public static function onAfterAdminCronRun(Box_App $app,Box_Event $event) {
+		
+
+		$api_guest = $app->getApiGuest();
+
 		$pdo = Box_Db::getPdo();
         $query="SELECT * FROM extension_meta WHERE extension='mod_autoticket'";
         $stmt = $pdo->prepare($query);
@@ -277,7 +271,15 @@ class Box_Mod_Autoticket_Service
 								
 							} else {
 								
-								$pdo = Box_Db::getPdo();
+		$params = array(
+		"name" => $overview[0]->subject,
+		"email" => $email[0]['email'],
+		"subject" => $email[0]['email']." - ".$overview[0]->subject,
+		"message" => $message['body']
+		);
+		$api_guest->support_ticket_create($params);
+								
+								/*$pdo = Box_Db::getPdo();
 								$query="INSERT INTO `support_ticket`(`support_helpdesk_id`, `client_id`, `priority`, `subject`, `status`, `rel_type`, `rel_id`, `rel_task`, `rel_new_value`, `rel_status`, `created_at`, `updated_at`) VALUES ('1',".$email[0]['id'].",100,'".$email[0]['email']." - ".$overview[0]->subject."','open',NULL,NULL,NULL,NULL,NULL,NOW(),NOW())";
 								$stmt = $pdo->prepare($query);
 								$stmt->execute();
@@ -292,7 +294,7 @@ class Box_Mod_Autoticket_Service
 								$pdo = Box_Db::getPdo();
 								$query="INSERT INTO `support_ticket_message`(`support_ticket_id`, `client_id`, `admin_id`, `content`, `attachment`, `ip`, `created_at`, `updated_at`) VALUES (".$newid.",".$email[0]['id'].",NULL,'".$message['body']."',NULL,NULL,NOW(),NOW())";
 								$stmt = $pdo->prepare($query);
-								$stmt->execute(); 
+								$stmt->execute(); */
 
 								
 								//Usuwanie dodanej wiadomości
