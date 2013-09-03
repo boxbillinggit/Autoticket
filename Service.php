@@ -228,7 +228,7 @@ class Box_Mod_Autoticket_Service
 			return $result;
 		}
 	
-    public static function onAfterAdminCronRun(Box_App $app) {
+    public static function onAfterAdminCronRun(Box_Event $event) {
 		
 
 		$api_guest = $app->getApiGuest();
