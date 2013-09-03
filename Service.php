@@ -231,7 +231,7 @@ class Box_Mod_Autoticket_Service
     public static function onAfterAdminCronRun(Box_Event $event) {
 		
 
-		$api_guest = $app->getApiGuest();
+		$api_guest = $event->getApiGuest();
 
 		$pdo = Box_Db::getPdo();
         $query="SELECT * FROM extension_meta WHERE extension='mod_autoticket'";
