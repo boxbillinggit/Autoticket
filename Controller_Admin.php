@@ -100,39 +100,10 @@ class Box_Mod_Autoticket_Controller_Admin
         $app->get('/autoticket',             'get_index', array(), get_class($this));
 		$app->get('/autoticket/settings',    'get_settings', array(), get_class($this));
     }
-	
-	/**
-	*
-	*   POBIERANIE KONFIGURACJI
-	*
-	*/
-	
-	public function install_sql() {
-		
-		$pdo = Box_Db::getPdo();
-        $query="SELECT `param` FROM `setting` WHERE `param` ='autoticket_last_cron_exec'";
-        $stmt = $pdo->prepare($query);
-        $stmt->execute();
-		$checkIfExits = $stmt->fetchAll();
-		
-		if(empty($checkIfExits)) {
-			
-			$created_at = date("c");
-			$pdo = Box_Db::getPdo();
-			$query="INSERT INTO `setting`(`param`, `value`, `public`, `category`, `hash`, `created_at`, `updated_at`) VALUES ('autoticket_last_cron_exec','',0,NULL,NULL,'{$created_at}','')";
-			$stmt = $pdo->prepare($query);
-			$stmt->execute();
-			
-		} else {
-			return true;
-		}
-		
-	}
-	
+
+
 	public function _config(Box_App $app,$name) {
 		$api = $app->getApiAdmin();
-		
-			$this->install_sql();
 		
 			$pdo = Box_Db::getPdo();
 			$query="SELECT `meta_value` FROM `extension_meta` WHERE `extension` ='mod_autoticket'";

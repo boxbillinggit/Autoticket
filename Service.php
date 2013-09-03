@@ -38,13 +38,19 @@ class Box_Mod_Autoticket_Service
      */
     public function install()
     {
-        // execute sql script if needed
         $pdo = Box_Db::getPdo();
         $query="SELECT NOW()";
         $stmt = $pdo->prepare($query);
         $stmt->execute();
+			
+			
+			//ADD TO INSTALL SQL
+			$created_at = date("c");
+			$pdo = Box_Db::getPdo();
+			$query="INSERT INTO `setting`(`param`, `value`, `public`, `category`, `hash`, `created_at`, `updated_at`) VALUES ('autoticket_last_cron_exec','',0,NULL,NULL,'{$created_at}','')";
+			$stmt = $pdo->prepare($query);
+			$stmt->execute();
 		
-        //throw new Box_Exception("Throw exception to terminate module installation process with a message", array(), 123);
         return true;
     }
     
