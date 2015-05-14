@@ -24,8 +24,21 @@
  * still reserved.
  * 
  */
-class Box_Mod_Autoticket_Service
+namespace Box\Mod\Autoticket;
+
+class Service
 {
+	
+	protected $di;
+
+    /**
+     * @param mixed $di
+     */
+    public function setDi($di)
+    {
+        $this->di = $di;
+    }
+	
     /**
      * Method to install module. In most cases you will provide your own
      * database table or tables to store extension related data.
@@ -38,19 +51,23 @@ class Box_Mod_Autoticket_Service
      */
     public function install()
     {
-        $pdo = Box_Db::getPdo();
-        $query="SELECT NOW()";
-        $stmt = $pdo->prepare($query);
-        $stmt->execute();
+
+			$values = array(
+            'par'        =>  'autoticket_last_cron_exec',
+            );
 			
+			$settings = $this->di['db']->findOne('setting', 'param = :par', $values);
+        if(!$settings) {
+            $settings = $this->di['db']->dispense('setting');
+            $settings->value = '';
+            $settings->public  = '0';
+            $settings->category = NULL;
+            $settings->hash   = NULL;
+            $settings->created_at = date('Y-m-d H:i:s');
+        }
+        $settings->updated_at = date('Y-m-d H:i:s');
+        $this->di['db']->store($settings);
 			
-			//ADD TO INSTALL SQL
-			$created_at = date("c");
-			$pdo = Box_Db::getPdo();
-			$query="INSERT INTO `setting`(`param`, `value`, `public`, `category`, `hash`, `created_at`, `updated_at`) VALUES ('autoticket_last_cron_exec','',0,NULL,NULL,'{$created_at}','')";
-			$stmt = $pdo->prepare($query);
-			$stmt->execute();
-		
         return true;
     }
     
@@ -80,6 +97,12 @@ class Box_Mod_Autoticket_Service
         //throw new Box_Exception("Throw exception to terminate module update process with a message", array(), 125);
         return true;
     }
+	
+	public function activate()
+    {
+		throw new Box_Exception("Throw exception to terminate module update process with a message", array(), 125);
+        return true;
+	}
     
     /**
      * Method is used to create search query for paginated list.
@@ -133,7 +156,7 @@ class Box_Mod_Autoticket_Service
      * @param Box_Event $event
      * @return type 
      */
-    public static function onEventClientLoginFailed(Box_Event $event)
+    public static function onEventClientLoginFailed(\Box_Event $event)
     {
         //@note almost in all casesyou will need Admin API
         $api = $event->getApiAdmin();
@@ -185,7 +208,7 @@ class Box_Mod_Autoticket_Service
      * This event hook is registered in example module client API call
      * @param Box_Event $event 
      */
-    public static function onAfterClientCalledExampleModule(Box_Event $event)
+    public static function onAfterClientCalledExampleModule(\Box_Event $event)
     {
         //error_log('Called event from example module');
         
@@ -205,7 +228,7 @@ class Box_Mod_Autoticket_Service
      * Example event hook for public ticket and set event return value
      * @param Box_Event $event 
      */
-    public static function onBeforeGuestPublicTicketOpen(Box_Event $event)
+    public static function onBeforeGuestPublicTicketOpen(\Box_Event $event)
     {
         $data = $event->getParameters();
         $data['status'] = 'open';
@@ -216,7 +239,7 @@ class Box_Mod_Autoticket_Service
      * Example email sending
      * @param Box_Event $event
      */
-    public static function onAfterClientOrderCreate(Box_Event $event)
+    public static function onAfterClientOrderCreate(\Box_Event $event)
     {
         $api    = $event->getApiAdmin();
         $params = $event->getParameters();
@@ -241,20 +264,15 @@ class Box_Mod_Autoticket_Service
 			return $result;
 		}
 	
-    public static function onAfterAdminCronRun(Box_Event $event) {
-	
-	 $api_guest = $event->getApiGuest();
-	 $api    = $event->getApiAdmin();
-	 
-	 
-		$pdo = Box_Db::getPdo();
-        $query="SELECT * FROM extension_meta WHERE extension='mod_autoticket'";
-        $stmt = $pdo->prepare($query);
-        $stmt->execute();
-		
-		$toArray = $stmt->fetchAll();
-		$result = json_decode($toArray[0]['meta_value']);
-		
+    public static function onAfterAdminCronRun(\Box_Event $event) {
+
+	try {
+		 $di = $event->getDi();
+
+		$results = $di['db']->getRow("SELECT `meta_value` FROM `extension_meta` WHERE `extension` ='mod_autoticket'");
+      
+		$result = json_decode($results['meta_value']);
+
 		$mbox = imap_open("{".$result->autoticket_host."/imap/notls}INBOX", $result->autoticket_email, $result->autoticket_password)
 			  or die("can't connect: " . imap_last_error());
 		
@@ -272,21 +290,16 @@ class Box_Mod_Autoticket_Service
 							$overview = imap_fetch_overview($mbox,$email_id,0);	
 							$message['body'] = imap_fetchbody($mbox,$email_id,"1");		
 							
-							$params = array("email"=>Box_Mod_Autoticket_Service::decode_imap_text($overview[0]->from));
+							$params = array("email"=>$this->decode_imap_text($overview[0]->from));
 							
-							$pdo = Box_Db::getPdo();
-							$query="SELECT `id`,`email` FROM `client` WHERE `email` = '".Box_Mod_Autoticket_Service::decode_imap_text($overview[0]->from)."'";
-							$stmt = $pdo->prepare($query);
-							$stmt->execute();
-							
-							$email = $stmt->fetchAll();
+							$stmt = $this->di['db']->getRow("SELECT `id`,`email` FROM `client` WHERE `email` = '".$this->decode_imap_text($overview[0]->from)."'");
 							
 							if(empty($email[0]['email'])) {
 								
 								$params = array(
-								"name" => Box_Mod_Autoticket_Service::decode_imap_text($overview[0]->from),
-								"email" => Box_Mod_Autoticket_Service::decode_imap_text($overview[0]->from),
-								"subject" => Box_Mod_Autoticket_Service::decode_imap_text($overview[0]->from)." - ".$overview[0]->subject,
+								"name" => $this->decode_imap_text($overview[0]->from),
+								"email" => $this->decode_imap_text($overview[0]->from),
+								"subject" => $this->decode_imap_text($overview[0]->from)." - ".$overview[0]->subject,
 								"message" => $message['body']
 								);
 								
@@ -332,18 +345,17 @@ class Box_Mod_Autoticket_Service
 														
 						}
 						
-		//DATA WYKONANIA CRONA!!			
-		$date_update = date("c");
-		$pdo = Box_Db::getPdo();
-        $query="UPDATE `setting` SET `value`='{$date_update}' WHERE id='40'";
-        $stmt = $pdo->prepare($query);
-        $stmt->execute(); 
-
+		//DATA WYKONANIA CRONA!!
+		$date_update = date('Y-m-d H:i:s');
+		$this->di['db']->exec("UPDATE `setting` SET `value`='{$date_update}' WHERE param='autoticket_last_cron_exec'");			
+		
 		} else {
 			echo "imap_check() failed: " . imap_last_error() . "<br />\n";
 		}
 		
 		imap_close($mbox);	
-		
+		} catch(\Exception $e) {
+            error_log('Error executing autoticket queue: '.$e->getMessage());
+        }
 	}
 }

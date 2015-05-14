@@ -1,4 +1,4 @@
 mod_autoticket
 ==============
 
-http://boxbilling.pl/Thread-Modu%C5%82-Auto-Ticket-Beta
+http://www.boxbilling.com.pl/modu%C5%82y-f8/autoticket-t1.html
