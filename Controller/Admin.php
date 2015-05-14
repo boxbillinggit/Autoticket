@@ -20,8 +20,30 @@
 /**
  * This file connects BoxBilling amin area interface and API
  */
-class Box_Mod_Autoticket_Controller_Admin
+
+namespace Box\Mod\Autoticket\Controller;
+
+class Admin implements \Box\InjectionAwareInterface
 {
+	
+	protected $di;
+
+    /**
+     * @param mixed $di
+     */
+    public function setDi($di)
+    {
+        $this->di = $di;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getDi()
+    {
+        return $this->di;
+    }
+	
     /**
      * This method registers menu items in admin area navigation block
      * This navigation is cached in bb-data/cache/{hash}. To see changes please
@@ -43,14 +65,14 @@ class Box_Mod_Autoticket_Controller_Admin
                     'location'  => 'autoticket', // place this module in extensions group
                     'label'     => 'Auto Ticket',
                     'index'     => 1500,
-                    'uri'       => 'autoticket',
+                    'uri'       => $this->di['url']->adminLink('autoticket'),
                     'class'     => '',
                 ),
 				array(
                     'location'  => 'autoticket', // place this module in extensions group
                     'label'     => 'Auto Ticket Ustawienia',
                     'index'     => 1501,
-                    'uri'       => 'autoticket/settings',
+                    'uri'       => $this->di['url']->adminLink('autoticket/settings'),
                     'class'     => '',
                 ),
             ),
@@ -95,47 +117,39 @@ class Box_Mod_Autoticket_Controller_Admin
      * @example $app->get('/example/:id',        'get_index', array('id'=>'[0-9]+'), get_class($this));
      * @param Box_App $app
      */
-    public function register(Box_App &$app)
+    public function register(\Box_App &$app)
     {
         $app->get('/autoticket',             'get_index', array(), get_class($this));
 		$app->get('/autoticket/settings',    'get_settings', array(), get_class($this));
     }
 
 
-	public function _config(Box_App $app,$name) {
-		$api = $app->getApiAdmin();
+	public function _config(\Box_App $app,$name) {
+		$api = $this->di['api_admin'];
 		
-			$pdo = Box_Db::getPdo();
-			$query="SELECT `meta_value` FROM `extension_meta` WHERE `extension` ='mod_autoticket'";
-			$stmt = $pdo->prepare($query);
-			$stmt->execute();
-		
-				
-		$toArray = $stmt->fetchAll();
-		$result = json_decode($toArray[0]['meta_value']);
-		
-		return $result->$name;
+		$result = $this->di['db']->getRow("SELECT `meta_value` FROM `extension_meta` WHERE `extension` ='mod_autoticket'");
+       
+		$results = json_decode($result['meta_value']);
+
+		return $results->$name;
 	}
 	
 	public function _cron_info() {
-			$pdo = Box_Db::getPdo();
-			$query="SELECT `value` FROM `setting` WHERE `param` ='autoticket_last_cron_exec'";
-			$stmt = $pdo->prepare($query);
-			$stmt->execute();	
-			$toArray = $stmt->fetchAll();
-			return $toArray[0]['value'];
+			$cron = $this->di['db']->getRow("SELECT `value` FROM `setting` WHERE `param` ='autoticket_last_cron_exec'");
+			return $cron['value'];
 	}
 
-    public function get_index(Box_App $app)
+    public function get_index(\Box_App $app)
     {
         // always call this method to validate if admin is logged in
-        $api = $app->getApiAdmin();
+		$this->di['is_admin_logged'];
+        $api = $this->di['api_admin'];
 		
 		$check = $this->_config($app,"autoticket_host");
-		
+
 		if(empty($check))
 		{
-			header("Location: /bb-admin.php/autoticket/settings");
+			header("Location: /index.php?_url=/bb-admin/autoticket/settings");
 		} else {
 		if (function_exists('imap_open')) {
 			$parametr = array();
@@ -150,7 +164,7 @@ class Box_Mod_Autoticket_Controller_Admin
         
     }
 	
-	public function get_settings(Box_App $app) {
+	public function get_settings(\Box_App $app) {
 		$api_admin = $app->getApiAdmin();
 		
 			$params = array();

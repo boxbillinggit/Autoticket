@@ -4,9 +4,9 @@
     "name":         "Auto Email Ticket",
     "description":  "Moduł automatycznego tworzenia Ticketów.",
     "icon_url":     "icon.png",
-    "homepage_url": "http://www.boxbilling.pl/",
+    "homepage_url": "http://www.boxbilling.com.pl/",
     "author":       "Zaba",
-    "author_url":   "http://boxbilling.pl/Thread-Modu%C5%82-Auto-Ticket-Beta",
+    "author_url":   "http://www.boxbilling.com.pl/modu%C5%82y-f8/autoticket-t1.html",
     "license":      "GPL version 2 or later - http://www.gnu.org/licenses/old-licenses/gpl-2.0.html",
-    "version":      "1.2.6"
+    "version":      "1.0"
 }
